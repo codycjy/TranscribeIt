@@ -15,6 +15,8 @@ It is in very early stages of development but you can try it now.
 - [ ] Use github actions to push to dockerhub
 - [ ] Utilize llm to summarize the transcriptions
 - [ ] Better docker compose setup
+- [ ] Develop a browser extension to easy add videos to the app
+- [ ] Add local video support
 
 Welcome to contribute to this project. 
 
