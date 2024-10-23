@@ -30,10 +30,11 @@ jobs:
         with:
           context: .
           file: Dockerfile.api
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/transcribe-it-api:latest
 
-      - name: Build and push API image
+      - name: Build and push API image (CUDA)
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -46,5 +47,6 @@ jobs:
         with:
           context: .
           file: Dockerfile.frontend
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/transcribe-it-frontend:latest
