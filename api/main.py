@@ -23,7 +23,18 @@ DATABASE_PATH = BASE_DIR / "transcriptions.db"
 WHISPER_MODEL = os.getenv("WHISPER_MODEL", "base")
 DOWNLOAD_DIR.mkdir(exist_ok=True)
 
+AVAILABLE_MODELS = [
+    "tiny.en", "tiny",
+    "base.en", "base",
+    "small.en", "small",
+    "medium.en", "medium",
+    "large",
+    "turbo"
+]
 logger.info(f"Using Whisper model: {WHISPER_MODEL}")
+if WHISPER_MODEL not in AVAILABLE_MODELS:
+    logger.error(f"Invalid Whisper model: {WHISPER_MODEL}")
+
 YTDL_OPTIONS = {
     'format': 'bestaudio/best',
     'postprocessors': [{
@@ -35,6 +46,7 @@ YTDL_OPTIONS = {
     'no_warnings': True,
 }
 
+
 class TaskStatus(str, Enum):
     PENDING = "pending"
     DOWNLOADING = "downloading"
@@ -42,8 +54,10 @@ class TaskStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
 
+
 class TranscriptionRequest(BaseModel):
     url: HttpUrl
+
 
 class TranscriptionResponse(BaseModel):
     id: int
@@ -54,6 +68,7 @@ class TranscriptionResponse(BaseModel):
     error_message: Optional[str] = None
     created_at: str
     completed_at: Optional[str] = None
+
 
 def init_db():
     """Initialize the SQLite database"""
@@ -78,6 +93,7 @@ def init_db():
     finally:
         conn.close()
 
+
 class DBManager:
     @staticmethod
     async def create_task(url: str) -> int:
@@ -94,13 +110,13 @@ class DBManager:
         return await asyncio.to_thread(_create)
 
     @staticmethod
-    async def update_task_status(task_id: int, status: TaskStatus, title: str = None, 
-                                content: str = None, error_message: str = None):
+    async def update_task_status(task_id: int, status: TaskStatus, title: str = None,
+                                 content: str = None, error_message: str = None):
         def _update():
             conn = sqlite3.connect(DATABASE_PATH)
             update_fields = ["status = ?"]
             params = [status]
-            
+
             if title is not None:
                 update_fields.append("title = ?")
                 params.append(title)
@@ -113,9 +129,9 @@ class DBManager:
             if status in [TaskStatus.COMPLETED, TaskStatus.FAILED]:
                 update_fields.append("completed_at = ?")
                 params.append(datetime.now())
-            
+
             params.append(task_id)
-            
+
             query = f"UPDATE transcriptions SET {', '.join(update_fields)} WHERE id = ?"
             conn.execute(query, params)
             conn.commit()
@@ -127,7 +143,8 @@ class DBManager:
         def _get():
             conn = sqlite3.connect(DATABASE_PATH)
             conn.row_factory = sqlite3.Row
-            cursor = conn.execute("SELECT * FROM transcriptions WHERE id = ?", (task_id,))
+            cursor = conn.execute(
+                "SELECT * FROM transcriptions WHERE id = ?", (task_id,))
             result = cursor.fetchone()
             conn.close()
             return dict(result) if result else None
@@ -140,13 +157,15 @@ class DBManager:
         def _get_all():
             conn = sqlite3.connect(DATABASE_PATH)
             conn.row_factory = sqlite3.Row
-            cursor = conn.execute("SELECT * FROM transcriptions ORDER BY created_at DESC")
+            cursor = conn.execute(
+                "SELECT * FROM transcriptions ORDER BY created_at DESC")
             results = cursor.fetchall()
             conn.close()
             return [dict(row) for row in results]
 
         results = await asyncio.to_thread(_get_all)
         return [TranscriptionResponse(**row) for row in results]
+
 
 class VideoProcessor:
     @staticmethod
@@ -179,49 +198,56 @@ class VideoProcessor:
         except Exception as e:
             logger.error(f"Failed to clean up file {file_path}: {e}")
 
+
 async def process_video(task_id: int, url: str):
     """Main processing function"""
     try:
         # Update status to downloading
         await DBManager.update_task_status(task_id, TaskStatus.DOWNLOADING)
-        
+
         # Download video
         title, audio_path = await VideoProcessor.download_video(url)
-        
+
         # update status to transcribing
         await DBManager.update_task_status(task_id, TaskStatus.TRANSCRIBING, title=title)
-        
+
         # Transcribe audio
         content = await VideoProcessor.transcribe_audio(audio_path)
-        
+
         # Update status to completed
         await DBManager.update_task_status(
-            task_id, 
-            TaskStatus.COMPLETED, 
+            task_id,
+            TaskStatus.COMPLETED,
             content=content
         )
-        
+
         # Clean up audio file # TODO: use ENV decide whether to cleanup
         await VideoProcessor.cleanup_file(audio_path)
-            
+
     except Exception as e:
         logger.error(f"Task {task_id} failed: {e}")
         await DBManager.update_task_status(
-            task_id, 
-            TaskStatus.FAILED, 
+            task_id,
+            TaskStatus.FAILED,
             error_message=str(e)
         )
 
 # API endpoints
+
+
 @app.get("/model")
 async def get_model():
+    if WHISPER_MODEL not in AVAILABLE_MODELS:
+        return {"error": "Invalid Whisper model", 'model': "Invalid"}
     return {"model": WHISPER_MODEL}
+
 
 @app.post("/transcribe", response_model=TranscriptionResponse)
 async def create_transcription(request: TranscriptionRequest, background_tasks: BackgroundTasks):
     task_id = await DBManager.create_task(request.url)
     background_tasks.add_task(process_video, task_id, str(request.url))
     return await DBManager.get_task(task_id)
+
 
 @app.get("/transcriptions/{task_id}", response_model=TranscriptionResponse)
 async def get_transcription(task_id: int):
@@ -230,9 +256,11 @@ async def get_transcription(task_id: int):
         raise HTTPException(status_code=404, detail="Task not found")
     return task
 
+
 @app.get("/transcriptions", response_model=List[TranscriptionResponse])
 async def get_transcriptions():
     return await DBManager.get_all_tasks()
+
 
 @app.delete("/transcriptions/{task_id}")
 async def delete_transcription(task_id: int):
@@ -247,9 +275,12 @@ async def delete_transcription(task_id: int):
     return {"message": "Task deleted"}
 
 # Event handlers
+
+
 @app.on_event("startup")
 async def startup_event():
     init_db()
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
