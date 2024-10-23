@@ -1,7 +1,3 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel, HttpUrl
-import whisper
-import yt_dlp
 import sqlite3
 import asyncio
 from datetime import datetime
@@ -10,6 +6,10 @@ import os
 from typing import Optional, List
 from enum import Enum
 import logging
+from fastapi import FastAPI, HTTPException, BackgroundTasks
+from pydantic import BaseModel, HttpUrl
+import whisper
+import yt_dlp
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,9 +31,10 @@ AVAILABLE_MODELS = [
     "large",
     "turbo"
 ]
-logger.info(f"Using Whisper model: {WHISPER_MODEL}")
+logger.info("using whisper model: %s", WHISPER_MODEL)
 if WHISPER_MODEL not in AVAILABLE_MODELS:
-    logger.error(f"Invalid Whisper model: {WHISPER_MODEL}")
+    logger.error("Invalid Whisper model, using default 'base'")
+    WHISPER_MODEL = "base"
 
 YTDL_OPTIONS = {
     'format': 'bestaudio/best',
@@ -88,7 +89,7 @@ def init_db():
         """)
         conn.commit()
     except Exception as e:
-        logger.error(f"Database initialization failed: {e}")
+        logger.error("Failed to initialize database: %s", e)
         raise
     finally:
         conn.close()
@@ -196,7 +197,7 @@ class VideoProcessor:
         try:
             await asyncio.to_thread(os.remove, file_path)
         except Exception as e:
-            logger.error(f"Failed to clean up file {file_path}: {e}")
+            logger.error("Failed to cleanup file: %s", e)
 
 
 async def process_video(task_id: int, url: str):
@@ -225,7 +226,7 @@ async def process_video(task_id: int, url: str):
         await VideoProcessor.cleanup_file(audio_path)
 
     except Exception as e:
-        logger.error(f"Task {task_id} failed: {e}")
+        logger.error("Failed to process video: %s", e)
         await DBManager.update_task_status(
             task_id,
             TaskStatus.FAILED,
