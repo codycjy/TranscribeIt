@@ -1,0 +1,21 @@
+services:
+  api:
+    image: saltfishc/transcribe-it-api:latest-cuda
+    environment:
+      - WHISPER_MODEL=base
+      # change model here
+      # see https://github.com/openai/whisper/?tab=readme-ov-file#available-models-and-languages
+    deploy: # use gpu as default
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  frontend:
+    image: saltfishc/transcribe-it-frontend:latest
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api

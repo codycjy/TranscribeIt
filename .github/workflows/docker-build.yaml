@@ -1,0 +1,59 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches: ["main", "dev"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    # 只在 push 事件时执行 push 到 DockerHub
+    # PR 只构建不推送
+    env:
+      SHOULD_PUSH: ${{ github.event_name == 'push' }}
+      TAG_SUFFIX: ${{ github.ref_name == 'dev' && '-dev' || '' }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to DockerHub
+        if: env.SHOULD_PUSH == 'true'
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile.api
+          platforms: linux/amd64,linux/arm64
+          push: ${{ env.SHOULD_PUSH }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/transcribe-it-api:latest${{ env.TAG_SUFFIX }}
+
+      - name: Build and push API image (CUDA)
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile-CUDA.api
+          push: ${{ env.SHOULD_PUSH }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/transcribe-it-api:latest-cuda${{ env.TAG_SUFFIX }}
+
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile.frontend
+          platforms: linux/amd64,linux/arm64
+          push: ${{ env.SHOULD_PUSH }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/transcribe-it-frontend:latest${{ env.TAG_SUFFIX }}
