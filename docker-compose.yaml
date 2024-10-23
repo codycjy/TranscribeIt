@@ -2,16 +2,10 @@ version: '3.8'
 
 services:
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
-    volumes:
-      - ./data:/app/downloads
-      - ./data:/app/transcriptions.db
+    image: saltfishc/transcribe-it-api:latest-cuda
     environment:
       - PYTHONUNBUFFERED=1
       - WHISPER_MODEL=medium
-    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 1
     deploy:
       resources:
         reservations:
@@ -21,16 +15,8 @@ services:
               capabilities: [gpu]
 
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    volumes:
-      - ./frontend:/app
+    image: saltfishc/transcribe-it-frontend:latest
     ports:
       - "8501:8501"
-    environment:
-      - PYTHONUNBUFFERED=1
-      - WHISPER_MODEL=medium
     depends_on:
       - api
-    command: streamlit run main.py
