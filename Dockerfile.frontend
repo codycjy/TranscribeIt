@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY frontend /app/frontend
 
-CMD ["streamlit", "run", "frontend/main.py"]
+CMD ["streamlit", "run", "main.py"]
