@@ -1,12 +1,11 @@
-version: '3.8'
-
 services:
   api:
     image: saltfishc/transcribe-it-api:latest-cuda
     environment:
-      - PYTHONUNBUFFERED=1
-      - WHISPER_MODEL=medium
-    deploy:
+      - WHISPER_MODEL=base
+      # change model here
+      # see https://github.com/openai/whisper/?tab=readme-ov-file#available-models-and-languages
+    deploy: # use gpu as default
       resources:
         reservations:
           devices:
