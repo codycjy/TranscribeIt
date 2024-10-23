@@ -31,8 +31,10 @@ def delete_transcription(task_id: int):
 
 @st.cache_data
 def get_model_name():
-    import os
-    return os.environ.get("MODEL_NAME", "base")
+    """Get the model name"""
+    response = requests.get(f"{API_URL}/model")
+    response.raise_for_status()
+    return response.json().get("model", "Unknown")
 
 
 def main():

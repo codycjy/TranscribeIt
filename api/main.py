@@ -23,6 +23,7 @@ DATABASE_PATH = BASE_DIR / "transcriptions.db"
 WHISPER_MODEL = os.getenv("WHISPER_MODEL", "base")
 DOWNLOAD_DIR.mkdir(exist_ok=True)
 
+logger.info(f"Using Whisper model: {WHISPER_MODEL}")
 YTDL_OPTIONS = {
     'format': 'bestaudio/best',
     'postprocessors': [{
@@ -212,6 +213,10 @@ async def process_video(task_id: int, url: str):
         )
 
 # API endpoints
+@app.get("/model")
+async def get_model():
+    return {"model": WHISPER_MODEL}
+
 @app.post("/transcribe", response_model=TranscriptionResponse)
 async def create_transcription(request: TranscriptionRequest, background_tasks: BackgroundTasks):
     task_id = await DBManager.create_task(request.url)
