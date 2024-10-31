@@ -1,21 +1,23 @@
 services:
   api:
-    image: saltfishc/transcribe-it-api:latest-cuda
-    environment:
-      - WHISPER_MODEL=base
-      # change model here
-      # see https://github.com/openai/whisper/?tab=readme-ov-file#available-models-and-languages
-    deploy: # use gpu as default
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+    build:
+      context: .
+      dockerfile: Dockerfile # 或 Dockerfile.slim，取决于是否需要GPU支持
+    volumes:
+      - ./:/app/
+
+    ports:
+      - "8600:8000"
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000
 
   frontend:
-    image: saltfishc/transcribe-it-frontend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/app
     ports:
-      - "8501:8501"
+      - "8601:8501"
     depends_on:
       - api
+    command: streamlit run frontend/main.py
