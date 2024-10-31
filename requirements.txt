@@ -1,0 +1,8 @@
+streamlit
+openai-whisper
+yt-dlp
+torch
+fastapi
+uvicorn
+pydantic
+aiohttp

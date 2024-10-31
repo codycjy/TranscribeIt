@@ -280,9 +280,17 @@ async def delete_transcription(task_id: int):
 
 @app.on_event("startup")
 async def startup_event():
-    init_db()
+    _ = DBManager()  # just to create instance
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    await asyncio.to_thread(process_pool.shutdown)
+    pass
+
+
+@app.get("/ping")
+async def root():
+    return {"text": "pong"}
+
+for route in app.routes:
+    print(f"{route.methods} {route.path}")
