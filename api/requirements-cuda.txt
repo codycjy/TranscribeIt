@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+openai-whisper
+yt-dlp
+aiohttp
+aiofiles
+pydantic

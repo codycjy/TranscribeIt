@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 BASE_DIR = Path(__file__).parent
 DOWNLOAD_DIR = BASE_DIR / "downloads"
@@ -17,3 +18,24 @@ YTDL_OPTIONS = {
     'quiet': True,
     'no_warnings': True,
 }
+
+DEFAULT_PROVIDERS= ["openai", "anthropic"]
+env_providers= os.getenv("AVAILABLE_PROVIDERS","")
+if providers:=eval(env_providers):
+    if not isinstance(providers, list):
+        AVAILABLE_PROVIDERS = DEFAULT_PROVIDERS
+    else:
+        AVAILABLE_PROVIDERS = providers
+
+DEFAULT_MODEL_MAP= {
+    "openai": ["gpt-3.5-turbo"],
+    "anthropic": ["claude-3-haiku-20240307"]
+}
+
+env_models= os.getenv("MODEL_MAP","")
+if models:=eval(env_models):
+    if not isinstance(models, dict):
+        MODEL_MAP = DEFAULT_MODEL_MAP
+    else:
+        MODEL_MAP = models
+
