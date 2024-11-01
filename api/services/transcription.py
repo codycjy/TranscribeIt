@@ -6,6 +6,14 @@ from ai_providers.factory import SummarizerFactory
 import os
 
 
+def check_model_availability(provider: str, model: str):
+    api_key = os.getenv(f"{provider.upper()}_API_KEY")
+    if not api_key:
+        return False
+    summarizer=SummarizerFactory.create_summarizer(provider=provider, api_key=api_key, model=model)
+    return summarizer.is_available()
+
+
 async def process_video(task_id: int, url: str):
     """处理视频转写任务的主函数"""
     db = get_db()
