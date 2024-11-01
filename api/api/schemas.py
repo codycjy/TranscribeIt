@@ -10,6 +10,7 @@ class TaskStatus(str, Enum):
     TRANSCRIBING = "transcribing"
     SUMMARIZING = "summarizing"
     COMPLETED = "completed"
+    SUMMARY_FAILED = "summary_failed"
     FAILED = "failed"
 
 
@@ -33,3 +34,9 @@ class TranscriptionResponse(BaseModel):
     error_message: Optional[str] = None
     created_at: datetime
     completed_at: Optional[datetime] = None
+
+class ModelRequest(BaseModel):
+    provider: str
+
+class ModelResponse(BaseModel):
+    available_models: list[str]

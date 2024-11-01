@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-COPY api/requirements.txt .
+COPY api/requirements-cuda.txt .
 
 RUN pip3 install --no-cache-dir -r requirements.txt
 
