@@ -45,7 +45,7 @@ def summary_transcription(task_id: int, model: dict, provider: str, max_tokens: 
     response = requests.post(
         f"{API_URL}/summaries/{task_id}", json=model, timeout=10)
     if response.status_code != 200:
-        raise ValueError(response.json())
+        raise ValueError(response.json()['detail'])
     return response.json()
 
 
