@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-openai-whisper
-openai
-anthropic
-yt-dlp
-aiohttp
-aiofiles
-pydantic
