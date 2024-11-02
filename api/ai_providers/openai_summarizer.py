@@ -28,7 +28,7 @@ class OpenAISummarizer(BaseSummarizer):
 
     async def is_available(self) -> bool:
         try:
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": "test"}],
                 max_tokens=5
