@@ -9,7 +9,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 
-RUN pip3 install torch==2.3.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+RUN case "$(uname -m)" in \
+        aarch64|arm64) pip3 install torch==2.3.1 ;; \
+        x86_64|amd64) pip3 install torch==2.3.1+cpu -f https://download.pytorch.org/whl/torch_stable.html ;; \
+        *) echo "Unsupported architecture" && exit 1 ;; \
+    esac
 
 COPY api/requirements.txt .
 
