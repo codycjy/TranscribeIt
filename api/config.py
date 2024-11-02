@@ -21,11 +21,16 @@ YTDL_OPTIONS = {
 
 DEFAULT_PROVIDERS= ["openai", "anthropic"]
 env_providers= os.getenv("AVAILABLE_PROVIDERS","")
-if providers:=eval(env_providers):
+import json
+
+try:
+    providers = json.loads(env_providers)
     if not isinstance(providers, list):
         AVAILABLE_PROVIDERS = DEFAULT_PROVIDERS
     else:
         AVAILABLE_PROVIDERS = providers
+except json.JSONDecodeError:
+    AVAILABLE_PROVIDERS = DEFAULT_PROVIDERS
 
 DEFAULT_MODEL_MAP= {
     "openai": ["gpt-3.5-turbo"],
@@ -33,9 +38,12 @@ DEFAULT_MODEL_MAP= {
 }
 
 env_models= os.getenv("MODEL_MAP","")
-if models:=eval(env_models):
+try:
+    models = json.loads(env_models)
     if not isinstance(models, dict):
         MODEL_MAP = DEFAULT_MODEL_MAP
     else:
         MODEL_MAP = models
+except json.JSONDecodeError:
+    MODEL_MAP = DEFAULT_MODEL_MAP
 
