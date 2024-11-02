@@ -1,6 +1,6 @@
 # ai_providers/base.py
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any
+from typing import Optional
 
 class BaseSummarizer(ABC):
     def __init__(self, api_key: str, **kwargs):

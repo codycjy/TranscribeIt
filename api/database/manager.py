@@ -2,9 +2,9 @@ import sqlite3
 import asyncio
 from datetime import datetime
 from typing import Optional, Dict, Any
+from config import DATABASE_PATH
 from api.schemas import TaskStatus, TranscriptionResponse
 from utils.logger import logger # TODO: use logger
-from config import DATABASE_PATH
 
 
 class DBManager:

@@ -1,9 +1,9 @@
+import os
 from utils.logger import logger
 from database.dependencies import get_db
 from api.schemas import TaskStatus, SummaryRequest
 from services.video import VideoProcessor
 from ai_providers.factory import SummarizerFactory
-import os
 
 
 def check_model_availability(provider: str, model: str):

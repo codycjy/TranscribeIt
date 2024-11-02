@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import os
 
@@ -21,7 +22,6 @@ YTDL_OPTIONS = {
 
 DEFAULT_PROVIDERS= ["openai", "anthropic"]
 env_providers= os.getenv("AVAILABLE_PROVIDERS","")
-import json
 
 try:
     providers = json.loads(env_providers)

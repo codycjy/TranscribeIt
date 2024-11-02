@@ -5,3 +5,4 @@ disable=
     C0116, # missing-function-docstring
     W0511, # fixme
     W0718, # broad-exception-caught
+    W0719, # broad-excepttion-raised

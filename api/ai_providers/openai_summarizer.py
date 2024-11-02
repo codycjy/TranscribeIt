@@ -1,5 +1,5 @@
 # ai_providers/openai_summarizer.py
-from typing import Optional, Dict, Any
+from typing import Optional
 from openai import OpenAI
 from prompt import DEFAULT_PROMPT
 from ai_providers.base import BaseSummarizer
@@ -28,7 +28,7 @@ class OpenAISummarizer(BaseSummarizer):
 
     async def is_available(self) -> bool:
         try:
-            response = await self.client.chat.completions.create(
+            await self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": "test"}],
                 max_tokens=5

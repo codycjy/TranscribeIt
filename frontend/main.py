@@ -1,3 +1,5 @@
+import random
+import string
 import requests
 import streamlit as st
 from config import API_URL
@@ -5,8 +7,6 @@ from config import API_URL
 
 # USE ENDPONIT TO combine BASE URL and ENDPOINT
 def random_key_prefix():
-    import random
-    import string
     return ''.join(random.choices(string.ascii_lowercase, k=4))
 
 

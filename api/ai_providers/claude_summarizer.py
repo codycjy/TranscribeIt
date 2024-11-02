@@ -1,7 +1,7 @@
 # ai_providers/claude_summarizer.py
 from typing import Optional
-from ai_providers.base import BaseSummarizer
 from anthropic import Anthropic
+from ai_providers.base import BaseSummarizer
 from prompt import DEFAULT_PROMPT
 DEFAULT_MODEL = "claude-3-haiku-20240307"
 
@@ -27,7 +27,7 @@ class ClaudeSummarizer(BaseSummarizer):
 
     async def is_available(self) -> bool:
         try:
-            response = self.client.messages.create(
+            self.client.messages.create(
                 model=self.model,
                 max_tokens=5,
                 messages=[{
