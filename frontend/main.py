@@ -1,9 +1,13 @@
+import random
+import string
 import requests
 import streamlit as st
+from config import API_URL
 
 
-# TODO: use ENV to decide API URL
-API_URL = "http://api:8000"
+# USE ENDPONIT TO combine BASE URL and ENDPOINT
+def random_key_prefix():
+    return ''.join(random.choices(string.ascii_lowercase, k=4))
 
 
 def create_transcription(url: str):
@@ -11,7 +15,7 @@ def create_transcription(url: str):
     if not url:
         raise ValueError("URL cannot be empty")
     response = requests.post(
-        f"{API_URL}/transcribe", json={"url": url}, timeout=10)
+        f"{API_URL}/transcriptions", json={"url": url}, timeout=10)
     response.raise_for_status()
     return response.json()
 
@@ -31,10 +35,41 @@ def delete_transcription(task_id: int):
     return response.json()
 
 
+def summary_transcription(task_id: int, model: dict, provider: str, max_tokens: int = 300):
+    """Get a transcription task"""
+    model = {
+        "provider": provider,
+        "model": model,
+        "max_tokens": max_tokens
+    }
+    response = requests.post(
+        f"{API_URL}/summaries/{task_id}", json=model, timeout=10)
+    if response.status_code != 200:
+        raise ValueError(response.json()['detail'])
+    return response.json()
+
+
+@st.cache_data
+def get_summarize_provider():
+    """Get all summarize provider"""
+    response = requests.get(f"{API_URL}/model/available_providers", timeout=10)
+    response.raise_for_status()
+    return response.json()
+
+
+@st.cache_data
+def get_summarize_model(provider: str):
+    """Get all summarize model"""
+    response = requests.post(
+        f"{API_URL}/model/available_models", json={"provider": provider}, timeout=10)
+    response.raise_for_status()
+    return response.json()
+
+
 @st.cache_data
 def get_model_name():
     """Get the model name"""
-    response = requests.get(f"{API_URL}/model", timeout=10)
+    response = requests.get(f"{API_URL}/model/transcribe", timeout=10)
     response.raise_for_status()
     return response.json().get("model", "Unknown")
 
@@ -55,7 +90,7 @@ def transcript_tab():
 
 
 def item_unit(task):
-    col1, col2, col3 = st.columns([1, 1, 2])
+    col1, col2, col3, col4 = st.columns([1, 1, 2, 1])
     with col1:
         if st.button("Delete", key=f"delete_{task.get('id')}"):
             try:
@@ -87,6 +122,23 @@ def item_unit(task):
             )
         else:
             st.write("")
+
+    with col4:
+        if st.session_state.get('model') is None or st.session_state.get('provider') is None:
+            st.warning("Please select a model")
+        else:
+            model = st.session_state.get('model')
+            provider = st.session_state.get('provider')
+            max_tokens = st.session_state.get('max_tokens')
+            if st.button("Summary", key=f"summary_{task.get('id')}"):
+                try:
+                    summary_transcription(task.get(
+                        'id'), model=model, provider=provider, max_tokens=max_tokens)  # type: ignore
+                    st.success(
+                        f"Task {task.get('id')} summarizing")
+                except Exception as e:
+                    st.error(
+                        f"Falied to summary task: {str(e)}")
 
 
 def history_tab():
@@ -127,6 +179,13 @@ def history_tab():
                             height=200,
                             key=f"content_{task.get('id')}"
                         )
+                    if task.get('summary'):
+                        st.text_area(
+                            "Summary",
+                            value=task.get('summary'),
+                            height=200,
+                            key=f"summary_{task.get('id')}+{random_key_prefix()}"
+                        )
 
                     # Add buttons
                     item_unit(task)
@@ -142,6 +201,20 @@ def history_tab():
 def main():
     st.title("Video Transcription Service")
 
+    # Show configurations # TODO: use ENV to decide model and database
+    st.sidebar.markdown("### Configurations")
+    model_name = get_model_name()
+    st.sidebar.text(f"Transcribe Model: {model_name}")
+    st.sidebar.text("Database: /app/transcriptions.db")
+    available_provider = get_summarize_provider()['provider']
+    provider = st.sidebar.selectbox("Summarize Provider", available_provider)
+    available_model = get_summarize_model(provider)['available_models']
+    summarize_model = st.sidebar.selectbox("Summarize Model", available_model)
+    max_tokens = st.sidebar.slider('Max Token', 0, 1000, 300)  # min max default
+    st.session_state.model = summarize_model
+    st.session_state.provider = provider
+    st.session_state.max_tokens = max_tokens
+
     # Create tabs
     tab1, tab2 = st.tabs(["New Transcription", "Transcription History"])
 
@@ -150,12 +223,6 @@ def main():
 
     with tab2:
         history_tab()
-
-    # Show configurations # TODO: use ENV to decide model and database
-    st.sidebar.markdown("### Configurations")
-    st.sidebar.text("Database: /app/transcriptions.db")
-    model_name = get_model_name()
-    st.sidebar.text(f"Model: {model_name}")
 
 
 if __name__ == "__main__":

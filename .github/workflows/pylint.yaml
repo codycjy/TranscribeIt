@@ -24,4 +24,12 @@ jobs:
         pip install -r frontend/requirements.txt
     - name: Analysing the code with pylint
       run: |
-        pylint $(git ls-files '*.py')
+        score=$(pylint --output-format=text $(git ls-files '*.py') | tail -2 | grep -Eo '[0-9.]+/10' | cut -d'/' -f1)
+        echo "Pylint score: $score"
+        if echo "$score" | awk '{if ($1 >= 9) exit 0; exit 1}'; then
+          echo "Pylint check passed!"
+          exit 0
+        else
+          echo "Pylint check failed. Score needs to be >= 9.0"
+          exit 1
+        fi

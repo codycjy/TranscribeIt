@@ -5,6 +5,13 @@ services:
       - WHISPER_MODEL=base
       # change model here
       # see https://github.com/openai/whisper/?tab=readme-ov-file#available-models-and-languages
+      - PYTHONUNBUFFERED=1
+      - WHISPER_MODEL=medium
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # - "AVAILABLE_PROVIDERS=[\"openai\", \"anthropic\"]" # currently only support openai and anthropic
+      # - "MODEL_MAP={\"openai\": [\"gpt-3.5-turbo\"], \"anthropic\": [\"claude-3-haiku-20240307\"]}" # change digest model here
+
     deploy: # use gpu as default
       resources:
         reservations:
